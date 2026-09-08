@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hackathon Strategist"
+  short_description: "Research, rank, and plan stronger hackathon bets"
+  default_prompt: "Use $hackathon-strategist to research these hackathons, tell me what to prioritize, and package the best idea for a new project."

@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Research any hackathon, rank aligned ideas, and leave with a portable build strategy." />
+    <title>HackScope — Hackathon Intelligence</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#" aria-label="HackScope home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none"><path d="M5 6.5 16 2l11 4.5v8c0 7-4.7 12.4-11 15.5C9.7 26.9 5 21.5 5 14.5v-8Z" fill="currentColor"/><path d="m10.5 16.5 3.5 3 7.5-8" stroke="#181915" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span>HackScope</span>
+        </a>
+
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <button class="nav-item active" type="button" data-nav="workspace">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5" /></svg>
+            Strategy lab
+          </button>
+          <button class="nav-item" type="button" data-nav="saved">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16l-6-3-6 3V4Z" /></svg>
+            Dossiers
+            <span class="nav-count" id="savedCount">0</span>
+          </button>
+        </nav>
+
+        <div class="pipeline-card">
+          <span class="sidebar-kicker">One signal in</span>
+          <ol>
+            <li><i>1</i><span>Research the field</span></li>
+            <li><i>2</i><span>Map the openings</span></li>
+            <li><i>3</i><span>Rank the ideas</span></li>
+            <li><i>4</i><span>Package the build</span></li>
+          </ol>
+          <span class="pipeline-out">A complete strategy out.</span>
+        </div>
+
+        <div class="sidebar-foot">
+          <span class="status-dot"></span>
+          <div><strong id="engineLabel">Checking research connection</strong><span id="engineSubline">Verifying server capabilities</span></div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="mobile-brand">
+            <span class="brand-mark mini" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M5 6.5 16 2l11 4.5v8c0 7-4.7 12.4-11 15.5C9.7 26.9 5 21.5 5 14.5v-8Z" fill="currentColor"/><path d="m10.5 16.5 3.5 3 7.5-8" stroke="#181915" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            HackScope
+          </div>
+          <div class="breadcrumb"><span>Strategy lab</span><i></i><strong id="dossierTitle">New dossier</strong></div>
+          <div class="top-actions">
+            <span class="mode-chip" id="modeChip"><i></i> Checking research</span>
+            <button class="icon-button" id="themeButton" type="button" aria-label="Toggle theme" title="Toggle theme">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="4"/></svg>
+            </button>
+            <button class="secondary-button compact" id="newDossierButton" type="button">New dossier</button>
+          </div>
+        </header>
+
+        <div class="page-wrap">
+          <section class="hero">
+            <div>
+              <p class="eyebrow"><span></span> Universal hackathon strategist</p>
+              <h1>Drop the signal.<br /><em>Get the strategy.</em></h1>
+            </div>
+            <p class="hero-copy">Give us one hackathon or a whole pending list. We research the field, rank what deserves attention first, choose the strongest idea, and package the path to build it.</p>
+          </section>
+
+          <section class="workspace" id="workspaceView">
+            <article class="launch-panel">
+              <div class="launch-copy">
+                <span class="step-label">01 · Start anywhere</span>
+                <h2>What are you competing in?</h2>
+                <p>One clue is enough—or paste every event you are considering.</p>
+              </div>
+              <form id="researchForm">
+                <label class="sr-only" for="seedInput">Hackathon name or related links</label>
+                <div class="seed-wrap">
+                  <span class="seed-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M10.5 18a7.5 7.5 0 1 1 5.3-2.2L21 21M8 10h5M10.5 7.5v5"/></svg>
+                  </span>
+                  <textarea id="seedInput" name="seed" maxlength="1800" rows="3" placeholder="e.g. ETHGlobal New York, a Devpost link, an announcement, or a list of events…"></textarea>
+                  <span class="seed-count"><b id="seedCount">0</b>/1800</span>
+                </div>
+                <div class="seed-hints" aria-label="Accepted starting points">
+                  <span>Official site</span><span>Devpost</span><span>X / LinkedIn post</span><span>Sponsor docs</span><span>Plain name</span>
+                </div>
+
+                <details class="context-details">
+                  <summary><span>Optional team context</span><em>Leave blank if unknown</em></summary>
+                  <div class="context-grid">
+                    <label class="field-group">
+                      <span class="field-label">Your strongest skills</span>
+                      <input id="skillsInput" maxlength="180" placeholder="e.g. React, Python, product design" />
+                    </label>
+                    <label class="field-group">
+                      <span class="field-label">Likely build window</span>
+                      <select id="timeframeInput">
+                        <option value="24">24 hours</option><option value="36">36 hours</option><option value="48" selected>48 hours</option><option value="72">3 days</option><option value="168">1 week</option>
+                      </select>
+                    </label>
+                    <label class="field-group full-field">
+                      <span class="field-label">Optimize the recommendation for</span>
+                      <select id="goalInput">
+                        <option>Best overall chance of winning</option><option>Strongest technical demo</option><option>Best startup potential</option><option>Most original concept</option><option>Fastest credible build</option>
+                      </select>
+                    </label>
+                  </div>
+                </details>
+
+                <button class="primary-button" id="researchButton" type="submit" disabled>
+                  <span class="button-label">Research it & choose my idea</span>
+                  <span class="spinner" aria-hidden="true"></span>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+                </button>
+              </form>
+              <div class="engine-notice" id="engineNotice" role="status" hidden>
+                <strong id="engineNoticeTitle"></strong>
+                <p id="engineNoticeDetail"></p>
+              </div>
+            </article>
+
+            <section class="research-progress" id="researchProgress" hidden aria-live="polite">
+              <div class="progress-head">
+                <div><span class="pulse-mark"></span><strong>Building the dossier</strong></div>
+                <span id="progressPercent">12%</span>
+              </div>
+              <div class="progress-track"><i id="progressBar"></i></div>
+              <div class="progress-steps">
+                <span class="active">Resolve the event</span><span>Study the organizer</span><span>Map the stack</span><span>Rank opportunities</span><span>Write the playbook</span>
+              </div>
+            </section>
+
+            <section class="results" id="resultsSection" aria-live="polite" hidden>
+              <div class="results-header">
+                <div><span class="step-label">02 · Strategic recommendation</span><h2>Your hackathon dossier</h2></div>
+                <div class="result-actions">
+                  <button class="icon-button" id="saveButton" type="button" aria-label="Save dossier" title="Save dossier"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16l-6-3-6 3V4Z"/></svg></button>
+                  <button class="secondary-button compact" id="exportButton" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 11l4 4 4-4M5 20h14"/></svg>Export kit</button>
+                </div>
+              </div>
+
+              <article class="recommendation-card">
+                <div class="score-orbit" id="scoreOrbit" style="--score:0"><div><strong id="scoreValue"></strong><span>FIT SCORE</span></div></div>
+                <div class="recommendation-copy">
+                  <span class="recommendation-kicker">Best opportunity</span>
+                  <h3 id="ideaName"></h3>
+                  <p class="tagline" id="ideaTagline"></p>
+                  <p class="thesis" id="ideaThesis"></p>
+                  <div class="recommendation-meta">
+                    <span><i>User</i><b id="targetUser"></b></span>
+                    <span><i>Winning demo</i><b id="demoMoment"></b></span>
+                    <span><i>Agent feasibility</i><b id="agentFeasibility"></b></span>
+                    <span><i>Research confidence</i><b id="recommendationConfidence"></b></span>
+                  </div>
+                </div>
+                <span class="recommendation-stamp">Recommended<br/>direction</span>
+              </article>
+
+              <div class="evidence-strip" id="evidenceStrip">
+                <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.4 8.8 8 11 4.6-2.2 8-6 8-11V7l-8-4Z"/></svg><span><strong></strong><small></small></span></div>
+                <button class="text-button" id="sourcesButton" type="button">View sources</button>
+              </div>
+
+              <div class="tab-shell">
+                <div class="tab-list" role="tablist" aria-label="Strategy dossier sections">
+                  <button class="tab active" id="intelligenceTab" role="tab" aria-selected="true" aria-controls="intelligencePanel" data-tab="intelligence">Intelligence <span>01</span></button>
+                  <button class="tab" id="priorityTab" role="tab" aria-selected="false" aria-controls="priorityPanel" data-tab="priority">Priority queue <span id="queueCount">01</span></button>
+                  <button class="tab" id="ideasTab" role="tab" aria-selected="false" aria-controls="ideasPanel" data-tab="ideas">Idea board <span id="ideaCount">00</span></button>
+                  <button class="tab" id="decisionTab" role="tab" aria-selected="false" aria-controls="decisionPanel" data-tab="decision">Why this wins <span id="reasonCount">00</span></button>
+                  <button class="tab" id="buildTab" role="tab" aria-selected="false" aria-controls="buildPanel" data-tab="build">Build kit <span>→</span></button>
+                </div>
+
+                <div class="tab-panel active" id="intelligencePanel" role="tabpanel" aria-labelledby="intelligenceTab">
+                  <div class="section-intro"><div><span class="mini-label">Field notes</span><h3>What this hackathon rewards</h3></div><p>Facts first. Inferences are labelled.</p></div>
+                  <div class="intel-overview">
+                    <article><span>Organizer & product</span><h4 id="organizerName"></h4><p id="organizerProfile"></p></article>
+                    <article><span>Strategic motion</span><h4 id="productMotionTitle"></h4><p id="productMotion"></p></article>
+                  </div>
+                  <div class="intel-section"><span class="subheading">Signals that matter</span><div class="signal-grid" id="judgeSignals"></div></div>
+                  <div class="intel-section"><span class="subheading">Infrastructure to leverage</span><div class="infrastructure-list" id="infrastructureList"></div></div>
+                  <div class="unknowns" id="unknownsBox"><strong>Research gaps</strong><ul id="unknownsList"></ul></div>
+                  <div class="sources-drawer" id="sourcesDrawer" hidden><div class="drawer-heading"><strong>Research sources</strong><button class="text-button" id="closeSources" type="button">Close</button></div><div id="sourceList"></div></div>
+                </div>
+
+                <div class="tab-panel" id="priorityPanel" role="tabpanel" aria-labelledby="priorityTab" hidden>
+                  <div class="section-intro"><div><span class="mini-label">Portfolio triage</span><h3>What to pursue first</h3></div><p>Urgency is balanced against fit, upside, effort, and agent feasibility.</p></div>
+                  <div class="priority-list" id="priorityList"></div>
+                  <div class="factor-note"><span>Priority formula</span><div id="priorityFormula"></div></div>
+                  <article class="agent-split">
+                    <div><span class="subheading">Agents can execute</span><ul id="agentTasks"></ul></div>
+                    <div><span class="subheading">Agents can assist</span><ul id="assistedTasks"></ul></div>
+                    <div><span class="subheading">Human action required</span><ul id="humanTasks"></ul></div>
+                  </article>
+                </div>
+
+                <div class="tab-panel" id="ideasPanel" role="tabpanel" aria-labelledby="ideasTab" hidden>
+                  <div class="section-intro"><div><span class="mini-label">Ranked, not brainstormed</span><h3>Opportunity shortlist</h3></div><p>Every idea runs through the same rubric.</p></div>
+                  <div class="idea-board" id="ideaBoard"></div>
+                  <div class="rubric-note"><span>Scored on</span><p>Organizer alignment · Judge appeal · Feasibility · Differentiation · Demo power</p></div>
+                </div>
+
+                <div class="tab-panel" id="decisionPanel" role="tabpanel" aria-labelledby="decisionTab" hidden>
+                  <div class="section-intro"><div><span class="mini-label">The defensible choice</span><h3>Why this is the best bet</h3></div><p>Evidence, tradeoffs, and honest risks.</p></div>
+                  <div class="reason-list" id="reasonList"></div>
+                  <div class="risk-table"><div class="risk-table-head"><span>Risk</span><span>How we contain it</span></div><div id="riskRows"></div></div>
+                </div>
+
+                <div class="tab-panel" id="buildPanel" role="tabpanel" aria-labelledby="buildTab" hidden>
+                  <div class="section-intro"><div><span class="mini-label">Portable execution system</span><h3>Take this into the build folder</h3></div><button class="text-button" id="copyKickoffButton" type="button">Copy kickoff prompt</button></div>
+                  <div class="kit-banner"><div><span>PROJECT KIT</span><strong>Strategy → skills → workflow → demo</strong></div><button class="secondary-button compact" id="downloadBuildKit" type="button">Download .md</button></div>
+                  <span class="subheading">Skill map</span><div class="skill-grid" id="skillGrid"></div>
+                  <span class="subheading workflow-heading">Build workflow</span><div class="build-timeline" id="buildTimeline"></div>
+                  <div class="cut-box"><span>Cut line</span><ul id="cutList"></ul></div>
+                  <article class="kickoff-card"><span>READY-TO-PASTE PROJECT PROMPT</span><p id="kickoffPrompt"></p></article>
+                </div>
+              </div>
+            </section>
+          </section>
+
+          <section class="saved-view" id="savedView" hidden>
+            <div class="saved-heading"><div><p class="eyebrow"><span></span> Your research archive</p><h2>Saved dossiers</h2></div><button class="secondary-button" id="backToWorkspace" type="button">Back to strategy lab</button></div>
+            <div class="saved-grid" id="savedGrid"></div>
+          </section>
+
+          <footer><span>HackScope</span><p>Research the game. Choose the wedge. Build the proof.</p><span>Portable by design.</span></footer>
+        </div>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status"><span></span><p>Copied to clipboard</p></div>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

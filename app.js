@@ -187,9 +187,12 @@ async function checkEngineStatus() {
     if (!response.ok) throw new Error("Status check failed");
     const status = await response.json();
     renderPriorityFormula(status.priorityWeights);
-    const providerName = status.provider === "gemini" ? "Gemini" : "OpenAI";
+    const providerNames = Object.entries(status.providers || {})
+      .filter(([, enabled]) => enabled)
+      .map(([name]) => name === "gemini" ? "Gemini" : name === "ollama" ? "Ollama" : "OpenAI");
+    const providerName = providerNames.length > 1 ? `${providerNames[0]} + ${providerNames.slice(1).join(" + ")}` : providerNames[0] || (status.provider === "gemini" ? "Gemini" : "OpenAI");
     setEngineStatus(status.liveResearch
-      ? { ready: true, title: `${providerName} research engine`, detail: `${status.model} · ${status.searchMode || "web research enabled"}` }
+      ? { ready: true, title: `${providerName} research engine`, detail: `${status.searchMode || "web research enabled"}${(status.fallbackProviders || []).length ? " · automatic fallback enabled" : ""}` }
       : { ready: false, title: "Live research not configured", detail: "Set GEMINI_API_KEY or OPENAI_API_KEY in .env, then restart HackScope." });
   } catch {
     setEngineStatus({ ready: false, title: "Research server unavailable", detail: "Start the HackScope server and refresh this page." });

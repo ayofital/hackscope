@@ -19,7 +19,7 @@ npm run dev
 
 Open [http://127.0.0.1:4173](http://127.0.0.1:4173).
 
-Without an API key, HackScope keeps the research action disabled and explains how to enable it. It does not generate template dossiers or present guessed ideas, infrastructure, deadlines, or scores as analysis.
+Without a configured research provider, HackScope keeps the research action disabled and explains how to enable it. It does not generate template dossiers or present guessed ideas, infrastructure, deadlines, or scores as analysis.
 
 ## Enable free live web research
 
@@ -39,6 +39,23 @@ npm run dev
 ```
 
 The default model is `gemini-3.6-flash`. Gemini generation uses the provider's free tier. Because Google Search grounding is not available to this free API tier, local development uses Bing's public RSS output for discovery, reads a limited set of linked pages, and sends that evidence to Gemini for schema-constrained synthesis. Bing's RSS terms limit this fallback to personal, non-commercial use; configure a dedicated search API before deploying HackScope as a public or commercial service.
+
+### Add Ollama as a local fallback
+
+HackScope can keep using the same web research layer while falling back to a local Ollama model for synthesis. Install Ollama from [ollama.com](https://ollama.com), then run:
+
+```powershell
+ollama pull llama3.2
+```
+
+Add this to `.env`:
+
+```dotenv
+OLLAMA_MODEL=llama3.2
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+```
+
+When both `GEMINI_API_KEY` and `OLLAMA_MODEL` are present, Gemini is tried first and Ollama is used automatically if Gemini is unavailable, rate-limited, or rejects a request. If only Ollama is configured, it becomes the primary provider. Ollama does not replace web search: HackScope still discovers and reads public sources, then sends that evidence to the selected model.
 
 Override the Gemini model if needed:
 

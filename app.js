@@ -10,6 +10,9 @@ const state = {
   progressTimer: null,
   engineReady: false,
   priorityWeights: null,
+  dossiers: [],
+  selectedDossierIndex: 0,
+  metadata: {},
 };
 
 const signalColors = ["#c9f45a", "#8bcbe5", "#c4b8ed", "#f59c7b", "#9fc52e", "#79b7d2"];
@@ -57,11 +60,7 @@ function confidenceLabel(value = "") {
   return String(value).replace(/\b\w/g, char => char.toUpperCase());
 }
 
-function renderResult(result, input, mode = "research", sources = [], metadata = {}) {
-  state.result = result;
-  state.currentInput = input;
-  state.mode = mode;
-  state.sources = sources;
+function renderDossierView(result, aggregate = result, mode = "research", sources = [], metadata = {}) {
   $("#resultsSection").hidden = false;
   $("#scoreValue").textContent = result.recommendation.fitScore;
   $("#scoreOrbit").style.setProperty("--score", result.recommendation.fitScore);
@@ -70,7 +69,7 @@ function renderResult(result, input, mode = "research", sources = [], metadata =
   $("#ideaThesis").textContent = result.recommendation.thesis;
   $("#targetUser").textContent = result.recommendation.targetUser;
   $("#demoMoment").textContent = result.recommendation.demoMoment;
-  $("#agentFeasibility").textContent = `${result.recommendation.agentFeasibilityScore}/100 · ${result.recommendation.agentFeasibilityLabel}`;
+  $("#agentFeasibility").textContent = `${result.recommendation.agentFeasibilityScore}/100 · ${result.recommendation.agentFeasibilityLabel} agent fit`;
   $("#recommendationConfidence").textContent = confidenceLabel(result.ideas[0]?.confidence || "unknown");
   $("#dossierTitle").textContent = shortText(result.hackathon.name, 38);
 
@@ -87,7 +86,7 @@ function renderResult(result, input, mode = "research", sources = [], metadata =
   $("#unknownsList").innerHTML = result.hackathon.unknowns.map(item => `<li>${escapeHtml(item)}</li>`).join("");
   $("#unknownsBox").hidden = !result.hackathon.unknowns.length;
 
-  const queue = result.portfolio.hackathons;
+  const queue = aggregate.portfolio?.hackathons || result.portfolio?.hackathons || [];
   $("#queueCount").textContent = String(queue.length).padStart(2, "0");
   $("#priorityList").innerHTML = queue.map((item, index) => {
     const label = item.agentFeasibility.label.toLowerCase();
@@ -100,7 +99,7 @@ function renderResult(result, input, mode = "research", sources = [], metadata =
       <div class="priority-metrics"><strong>${item.priorityScore}<small>/100</small></strong><span class="agent-badge ${badgeClass}">${escapeHtml(item.agentFeasibility.label)} agent fit</span></div>
     </article>`;
   }).join("");
-  const lead = queue[0]?.agentFeasibility || { autonomousTasks: [], assistedTasks: [], humanTasks: [] };
+  const lead = (result.portfolio?.hackathons?.[0] || queue[0])?.agentFeasibility || { autonomousTasks: [], assistedTasks: [], humanTasks: [] };
   $("#agentTasks").innerHTML = lead.autonomousTasks.map(item => `<li>${escapeHtml(item)}</li>`).join("");
   $("#assistedTasks").innerHTML = (lead.assistedTasks || []).map(item => `<li>${escapeHtml(item)}</li>`).join("");
   $("#humanTasks").innerHTML = lead.humanTasks.map(item => `<li>${escapeHtml(item)}</li>`).join("");
@@ -138,6 +137,44 @@ function renderResult(result, input, mode = "research", sources = [], metadata =
   $("#sourcesButton").textContent = live ? `View ${sources.length} sources` : "No sources";
   renderSources();
   updateSaveButton();
+}
+
+function renderDossierSwitcher() {
+  const dossiers = state.dossiers.length ? state.dossiers : state.result ? [state.result] : [];
+  const switcher = $("#dossierSwitcher");
+  if (!switcher) return;
+  switcher.hidden = dossiers.length < 2;
+  $("#dossierSwitcherNote").textContent = dossiers.length > 1
+    ? `${dossiers.length} distinct hackathons resolved · select one to inspect its full strategy`
+    : "";
+  $("#dossierTabs").innerHTML = dossiers.map((dossier, index) => {
+    const event = state.result?.portfolio?.hackathons?.find(item => item.name.toLowerCase() === String(dossier.hackathon?.name || "").toLowerCase());
+    const active = index === state.selectedDossierIndex;
+    return `<button class="dossier-tab${active ? " active" : ""}" type="button" role="tab" aria-selected="${active}" aria-controls="recommendationCard" data-dossier-index="${index}"><span>${String(index + 1).padStart(2, "0")}</span><strong>${escapeHtml(shortText(dossier.hackathon?.name || "Unnamed event", 42))}</strong><small>${event?.priorityScore ?? "n/a"}/100 priority</small></button>`;
+  }).join("");
+}
+
+function renderResult(result, input, mode = "research", sources = [], metadata = {}) {
+  state.result = result;
+  state.currentInput = input;
+  state.mode = mode;
+  state.sources = sources;
+  state.metadata = metadata;
+  state.dossiers = Array.isArray(result?.dossiers) && result.dossiers.length ? result.dossiers : [result];
+  state.selectedDossierIndex = 0;
+  renderDossierSwitcher();
+  renderDossierView(state.dossiers[0], result, mode, sources, metadata);
+}
+
+function selectDossier(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= state.dossiers.length) return;
+  state.selectedDossierIndex = index;
+  renderDossierSwitcher();
+  renderDossierView(state.dossiers[index], state.result, state.mode, state.sources, state.metadata);
+}
+
+function activeDossier() {
+  return state.dossiers[state.selectedDossierIndex] || state.result;
 }
 
 function renderSources() {
@@ -236,9 +273,10 @@ async function finishProgress() {
 }
 
 function dossierMarkdown() {
-  const r = state.result;
+  const r = activeDossier();
+  const portfolio = state.result?.portfolio || r?.portfolio;
   const input = state.currentInput;
-  if (!r || !input) return "";
+  if (!r || !input || !portfolio) return "";
   const sourceSection = state.sources.length ? state.sources.map((source, index) => `${index + 1}. [${source.title || source.url}](${source.url})`).join("\n") : "No sources are attached. Re-run this dossier with live research before relying on it.";
   return `# HackScope dossier: ${r.hackathon.name}
 
@@ -249,7 +287,7 @@ function dossierMarkdown() {
 
 ## Priority queue
 
-${r.portfolio.hackathons.map((item, index) => `${index + 1}. **${item.name}** — priority ${item.priorityScore}/100, agent feasibility ${item.agentFeasibility.score}/100, confidence ${item.confidence || "unknown"}\n   - Deadline: ${item.deadline}\n   - Factors: urgency ${item.factors?.deadlineUrgency ?? "n/a"}; agent fit ${item.factors?.agentFeasibility ?? "n/a"}; strategic fit ${item.factors?.strategicFit ?? "n/a"}; win opportunity ${item.factors?.winOpportunity ?? "n/a"}; effort/return ${item.factors?.effortReturn ?? "n/a"}\n   - ${item.rationale}`).join("\n")}
+${portfolio.hackathons.map((item, index) => `${index + 1}. **${item.name}** — priority ${item.priorityScore}/100, agent feasibility ${item.agentFeasibility.score}/100, confidence ${item.confidence || "unknown"}\n   - Deadline: ${item.deadline}\n   - Factors: urgency ${item.factors?.deadlineUrgency ?? "n/a"}; agent fit ${item.factors?.agentFeasibility ?? "n/a"}; strategic fit ${item.factors?.strategicFit ?? "n/a"}; win opportunity ${item.factors?.winOpportunity ?? "n/a"}; effort/return ${item.factors?.effortReturn ?? "n/a"}\n   - ${item.rationale}`).join("\n")}
 
 ## Recommended idea: ${r.recommendation.name}
 
@@ -301,15 +339,15 @@ ${r.risks.map(item => `- **${item.risk}:** ${item.mitigation}`).join("\n")}
 
 ### Agents can execute
 
-${r.portfolio.hackathons[0].agentFeasibility.autonomousTasks.map(item => `- ${item}`).join("\n")}
+${(r.portfolio?.hackathons?.[0] || portfolio.hackathons[0]).agentFeasibility.autonomousTasks.map(item => `- ${item}`).join("\n")}
 
 ### Human action required
 
-${r.portfolio.hackathons[0].agentFeasibility.humanTasks.map(item => `- ${item}`).join("\n")}
+${(r.portfolio?.hackathons?.[0] || portfolio.hackathons[0]).agentFeasibility.humanTasks.map(item => `- ${item}`).join("\n")}
 
 ### Agents can assist
 
-${(r.portfolio.hackathons[0].agentFeasibility.assistedTasks || []).map(item => `- ${item}`).join("\n")}
+${((r.portfolio?.hackathons?.[0] || portfolio.hackathons[0]).agentFeasibility.assistedTasks || []).map(item => `- ${item}`).join("\n")}
 
 ## Skill map
 
@@ -339,7 +377,7 @@ function downloadMarkdown() {
   const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = `hackscope-${state.result.hackathon.name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "dossier"}.md`;
+  link.download = `hackscope-${activeDossier().hackathon.name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "dossier"}.md`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(link.href), 0);
   showToast("Portable strategy kit exported");
@@ -361,7 +399,10 @@ function seedKey(input) { return input.seed.toLowerCase().replace(/\s+/g, " ").t
 
 function updateSaveButton() {
   const saved = state.currentInput && state.saved.some(item => seedKey(item.input) === seedKey(state.currentInput));
-  $("#saveButton").classList.toggle("active", Boolean(saved));
+  const saveButton = $("#saveButton");
+  saveButton.classList.toggle("active", Boolean(saved));
+  saveButton.setAttribute("aria-label", saved ? "Remove saved dossier" : "Save dossier");
+  saveButton.setAttribute("title", saved ? "Remove saved dossier" : "Save dossier");
   $("#savedCount").textContent = state.saved.length;
 }
 
@@ -411,6 +452,10 @@ function resetDossier() {
   state.result = null;
   state.currentInput = null;
   state.sources = [];
+  state.dossiers = [];
+  state.selectedDossierIndex = 0;
+  state.metadata = {};
+  $("#dossierSwitcher").hidden = true;
   updateSeedCount();
   updateSaveButton();
   showView("workspace");
@@ -455,14 +500,20 @@ $("#researchForm").addEventListener("submit", async event => {
 $("#seedInput").addEventListener("input", updateSeedCount);
 $$('[data-tab]').forEach(tab => tab.addEventListener("click", () => selectTab(tab.dataset.tab)));
 $$('[data-nav]').forEach(button => button.addEventListener("click", () => showView(button.dataset.nav)));
+$(".brand").addEventListener("click", event => { event.preventDefault(); resetDossier(); });
+$("#savedMobileButton").addEventListener("click", () => showView("saved"));
 $("#newDossierButton").addEventListener("click", resetDossier);
 $("#backToWorkspace").addEventListener("click", () => showView("workspace"));
 $("#saveButton").addEventListener("click", saveCurrent);
 $("#exportButton").addEventListener("click", downloadMarkdown);
 $("#downloadBuildKit").addEventListener("click", downloadMarkdown);
-$("#copyKickoffButton").addEventListener("click", () => state.result && copyText(state.result.buildKit.kickoffPrompt, "Kickoff prompt copied"));
+$("#copyKickoffButton").addEventListener("click", () => activeDossier()?.buildKit?.kickoffPrompt && copyText(activeDossier().buildKit.kickoffPrompt, "Kickoff prompt copied"));
 $("#sourcesButton").addEventListener("click", () => { selectTab("intelligence"); $("#sourcesDrawer").hidden = false; $("#sourcesDrawer").scrollIntoView({ behavior: "smooth", block: "nearest" }); });
 $("#closeSources").addEventListener("click", () => { $("#sourcesDrawer").hidden = true; });
+$("#dossierTabs").addEventListener("click", event => {
+  const tab = event.target.closest("[data-dossier-index]");
+  if (tab) selectDossier(Number(tab.dataset.dossierIndex));
+});
 $("#savedGrid").addEventListener("click", event => {
   const card = event.target.closest("[data-saved-index]");
   if (!card) return;

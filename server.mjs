@@ -534,11 +534,11 @@ Keep every field concise and decision-oriented. Dates must be explicit. The firs
   return prompt;
 }
 
-async function runOpenAiResearch(input) {
+async function runOpenAiResearch(input, modelOverride = process.env.OPENAI_MODEL || "gpt-5.5") {
   const prompt = buildDossierPrompt(input);
 
   const requestBody = JSON.stringify({
-      model,
+      model: modelOverride,
       input: prompt,
       reasoning: { effort: "medium" },
       tools: [{ type: "web_search" }],
@@ -668,7 +668,7 @@ async function runResearch(input) {
     try {
       const payload = candidate === "gemini" ? await runGeminiResearch(input)
         : candidate === "ollama" ? await runOllamaResearch(input)
-          : await runOpenAiResearch(input);
+          : await runOpenAiResearch(input, process.env.OPENAI_MODEL || "gpt-5.5");
       return {
         ...payload,
         providerUsed: candidate,
@@ -696,9 +696,12 @@ async function handleResearch(request, response) {
       goal: String(raw.goal || "Best overall chance of winning").slice(0, 100),
     };
     const cached = await cachedResearch(input);
-    if (cached) return sendJson(response, 200, { mode: "research", provider, model, cached: true, ...cached });
+    if (cached) {
+      const result = cached.result ? normalizeResearchResult(cached.result) : cached.result;
+      return sendJson(response, 200, { mode: "research", provider: cached.provider || provider, model: cached.model || model, cached: true, ...cached, result });
+    }
     const { result, sources, providerUsed, modelUsed } = await runResearch(input);
-    await storeResearch(input, { result, sources });
+    await storeResearch(input, { result, sources, provider: providerUsed, model: modelUsed });
     sendJson(response, 200, { mode: "research", provider: providerUsed, model: modelUsed, cached: false, result, sources });
   } catch (error) {
     console.error(error);

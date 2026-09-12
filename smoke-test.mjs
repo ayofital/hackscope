@@ -35,13 +35,17 @@ console.log(`SMOKE_STATUS=${result.status}`);
 let payload;
 try { payload = JSON.parse(result.body); } catch { payload = null; }
 if (result.status >= 200 && result.status < 300 && payload?.result) {
-  if (!payload.result.hackathon?.name || !payload.result.recommendation?.name || !Array.isArray(payload.sources)) {
+  const portfolio = payload.result.portfolio?.hackathons || [];
+  const dossiers = payload.result.dossiers || [];
+  const dossierNames = new Set(dossiers.map(dossier => dossier.hackathon?.name).filter(Boolean));
+  if (!payload.result.hackathon?.name || !payload.result.recommendation?.name || !Array.isArray(payload.sources) || !dossiers.length || portfolio.some(event => !dossierNames.has(event.name))) {
     console.error("Smoke response is missing required dossier fields");
     process.exit(1);
   }
   console.log(`PROVIDER=${payload.provider}/${payload.model}`);
   console.log(`CACHE=${payload.cached ? "hit" : "miss"}`);
   console.log(`HACKATHON=${payload.result.hackathon.name}`);
+  console.log(`DOSSIERS=${dossiers.length}`);
   console.log(`RECOMMENDATION=${payload.result.recommendation.name}`);
   console.log(`SOURCES=${payload.sources.length}`);
   process.exit(0);
